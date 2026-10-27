@@ -11632,6 +11632,7 @@ fn parse_alter_view_postgres() {
     assert_eq!(
         pg_and_generic().verified_stmt("ALTER VIEW IF EXISTS s.v OWNER TO o"),
         Statement::AlterView(AlterView {
+            materialized: false,
             name: ObjectName::from(vec![Ident::new("s"), Ident::new("v")]),
             if_exists: true,
             operation: AlterViewOperation::OwnerTo(Owner::Ident(Ident::new("o"))),
@@ -11775,7 +11776,7 @@ fn display_alter_view_propagates_write_errors() {
 
     let with_options =
         pg_and_generic().verified_stmt("ALTER VIEW IF EXISTS v WITH (x = 1) AS SELECT 1");
-    for rejected in ["ALTER VIEW ", "IF EXISTS ", "WITH ("] {
+    for rejected in ["ALTER ", "VIEW ", "IF EXISTS ", "WITH ("] {
         let mut writer = RejectingWriter(rejected);
         assert_eq!(
             write!(writer, "{with_options}"),
@@ -11785,8 +11786,64 @@ fn display_alter_view_propagates_write_errors() {
     }
 
     let columns = pg_and_generic().verified_stmt("ALTER VIEW IF EXISTS v (zeta) AS SELECT 1");
-    for rejected in ["ALTER VIEW ", "IF EXISTS ", "("] {
+    for rejected in ["ALTER ", "VIEW ", "IF EXISTS ", "("] {
         let mut writer = RejectingWriter(rejected);
         assert_eq!(write!(writer, "{columns}"), Err(fmt::Error), "{rejected:?}");
+    }
+}
+
+#[test]
+fn parse_alter_materialized_view() {
+    assert_eq!(
+        pg_and_generic().verified_stmt("ALTER MATERIALIZED VIEW IF EXISTS s.m OWNER TO alice"),
+        Statement::AlterView(AlterView {
+            materialized: true,
+            name: ObjectName::from(vec![Ident::new("s"), Ident::new("m")]),
+            if_exists: true,
+            operation: AlterViewOperation::OwnerTo(Owner::Ident(Ident::new("alice"))),
+        })
+    );
+    assert_eq!(
+        pg_and_generic().verified_stmt("ALTER MATERIALIZED VIEW m SET (fillfactor = 70)"),
+        Statement::AlterView(AlterView {
+            materialized: true,
+            name: ObjectName::from(vec![Ident::new("m")]),
+            if_exists: false,
+            operation: AlterViewOperation::SetOptions {
+                options: vec![SqlOption::KeyValue {
+                    key: Ident::new("fillfactor"),
+                    value: Expr::value(number("70")),
+                }],
+            },
+        })
+    );
+    for sql in [
+        "ALTER MATERIALIZED VIEW m RESET (fillfactor, autovacuum_enabled)",
+        "ALTER MATERIALIZED VIEW m RENAME TO m2",
+        "ALTER MATERIALIZED VIEW m RENAME COLUMN a TO b",
+        "ALTER MATERIALIZED VIEW m SET SCHEMA s",
+    ] {
+        pg_and_generic().verified_stmt(sql);
+    }
+
+    for (sql, expected) in [
+        (
+            "ALTER MATERIALIZED VIEW m AS SELECT 1",
+            "Expected: OWNER TO, RENAME, SET or RESET after ALTER MATERIALIZED VIEW, found: AS",
+        ),
+        (
+            "ALTER MATERIALIZED VIEW m ALTER COLUMN c SET DEFAULT 1",
+            "Expected: OWNER TO, RENAME, SET or RESET after ALTER MATERIALIZED VIEW, found: ALTER",
+        ),
+        (
+            "ALTER MATERIALIZED m OWNER TO alice",
+            "Expected: VIEW, found: m",
+        ),
+    ] {
+        assert_eq!(
+            pg_and_generic().parse_sql_statements(sql).unwrap_err(),
+            ParserError::ParserError(expected.to_string()),
+            "{sql}"
+        );
     }
 }
