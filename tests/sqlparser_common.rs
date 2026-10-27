@@ -5253,13 +5253,13 @@ fn parse_create_table_with_options() {
             assert_eq!(
                 vec![
                     SqlOption::KeyValue {
-                        key: "foo".into(),
+                        key: Ident::new("foo").into(),
                         value: Expr::Value(
                             (Value::SingleQuotedString("bar".into())).with_empty_span()
                         ),
                     },
                     SqlOption::KeyValue {
-                        key: "a".into(),
+                        key: Ident::new("a").into(),
                         value: Expr::value(number("123")),
                     },
                 ],
@@ -5510,7 +5510,8 @@ fn parse_alter_table() {
                         value: "classification".to_string(),
                         quote_style: Some('\''),
                         span: Span::empty(),
-                    },
+                    }
+                    .into(),
                     value: Expr::Value(
                         (Value::SingleQuotedString("parquet".to_string())).with_empty_span()
                     ),
@@ -5531,7 +5532,8 @@ fn parse_alter_table() {
                             value: "autovacuum_vacuum_scale_factor".to_string(),
                             quote_style: None,
                             span: Span::empty(),
-                        },
+                        }
+                        .into(),
                         value: Expr::Value(test_utils::number("0.01").with_empty_span()),
                     },
                     SqlOption::KeyValue {
@@ -5539,7 +5541,8 @@ fn parse_alter_table() {
                             value: "autovacuum_vacuum_threshold".to_string(),
                             quote_style: None,
                             span: Span::empty(),
-                        },
+                        }
+                        .into(),
                         value: Expr::Value(test_utils::number("500").with_empty_span()),
                     }
                 ],
@@ -5684,13 +5687,13 @@ fn parse_alter_view_with_options() {
             assert_eq!(
                 vec![
                     SqlOption::KeyValue {
-                        key: "foo".into(),
+                        key: Ident::new("foo").into(),
                         value: Expr::Value(
                             (Value::SingleQuotedString("bar".into())).with_empty_span()
                         ),
                     },
                     SqlOption::KeyValue {
-                        key: "a".into(),
+                        key: Ident::new("a").into(),
                         value: Expr::value(number("123")),
                     },
                 ],
@@ -9231,13 +9234,13 @@ fn parse_create_view_with_options() {
             assert_eq!(
                 CreateTableOptions::With(vec![
                     SqlOption::KeyValue {
-                        key: "foo".into(),
+                        key: Ident::new("foo").into(),
                         value: Expr::Value(
                             (Value::SingleQuotedString("bar".into())).with_empty_span()
                         ),
                     },
                     SqlOption::KeyValue {
-                        key: "a".into(),
+                        key: Ident::new("a").into(),
                         value: Expr::value(number("123")),
                     },
                 ]),
@@ -12032,11 +12035,11 @@ fn parse_cache_table() {
             has_as: false,
             options: vec![
                 SqlOption::KeyValue {
-                    key: Ident::with_quote('\'', "K1"),
+                    key: Ident::with_quote('\'', "K1").into(),
                     value: Expr::Value((Value::SingleQuotedString("V1".into())).with_empty_span()),
                 },
                 SqlOption::KeyValue {
-                    key: Ident::with_quote('\'', "K2"),
+                    key: Ident::with_quote('\'', "K2").into(),
                     value: Expr::value(number("0.88")),
                 },
             ],
@@ -12057,11 +12060,11 @@ fn parse_cache_table() {
             has_as: false,
             options: vec![
                 SqlOption::KeyValue {
-                    key: Ident::with_quote('\'', "K1"),
+                    key: Ident::with_quote('\'', "K1").into(),
                     value: Expr::Value((Value::SingleQuotedString("V1".into())).with_empty_span()),
                 },
                 SqlOption::KeyValue {
-                    key: Ident::with_quote('\'', "K2"),
+                    key: Ident::with_quote('\'', "K2").into(),
                     value: Expr::value(number("0.88")),
                 },
             ],
@@ -12082,11 +12085,11 @@ fn parse_cache_table() {
             has_as: true,
             options: vec![
                 SqlOption::KeyValue {
-                    key: Ident::with_quote('\'', "K1"),
+                    key: Ident::with_quote('\'', "K1").into(),
                     value: Expr::Value((Value::SingleQuotedString("V1".into())).with_empty_span()),
                 },
                 SqlOption::KeyValue {
-                    key: Ident::with_quote('\'', "K2"),
+                    key: Ident::with_quote('\'', "K2").into(),
                     value: Expr::value(number("0.88")),
                 },
             ],
@@ -13640,7 +13643,8 @@ fn parse_unload() {
                     value: "format".to_string(),
                     quote_style: None,
                     span: Span::empty(),
-                },
+                }
+                .into(),
                 value: Expr::Value(
                     (Value::SingleQuotedString("AVRO".to_string())).with_empty_span()
                 )
@@ -15891,13 +15895,13 @@ fn test_create_connector() {
                 with_dcproperties,
                 Some(vec![
                     SqlOption::KeyValue {
-                        key: Ident::with_quote('\'', "user"),
+                        key: Ident::with_quote('\'', "user").into(),
                         value: Expr::Value(
                             (Value::SingleQuotedString("root".to_string())).with_empty_span()
                         )
                     },
                     SqlOption::KeyValue {
-                        key: Ident::with_quote('\'', "password"),
+                        key: Ident::with_quote('\'', "password").into(),
                         value: Expr::Value(
                             (Value::SingleQuotedString("password".to_string())).with_empty_span()
                         )
@@ -15962,13 +15966,13 @@ fn test_alter_connector() {
                 properties,
                 Some(vec![
                     SqlOption::KeyValue {
-                        key: Ident::with_quote('\'', "user"),
+                        key: Ident::with_quote('\'', "user").into(),
                         value: Expr::Value(
                             (Value::SingleQuotedString("root".to_string())).with_empty_span()
                         )
                     },
                     SqlOption::KeyValue {
-                        key: Ident::with_quote('\'', "password"),
+                        key: Ident::with_quote('\'', "password").into(),
                         value: Expr::Value(
                             (Value::SingleQuotedString("password".to_string())).with_empty_span()
                         )
@@ -22116,7 +22120,7 @@ fn parse_cache_table_options_without_flag() {
                 table_name: ObjectName::from(vec![Ident::new("t")]),
                 has_as,
                 options: vec![SqlOption::KeyValue {
-                    key: Ident::with_quote('\'', "k"),
+                    key: Ident::with_quote('\'', "k").into(),
                     value: Expr::Value(Value::SingleQuotedString("v".into()).with_empty_span()),
                 }],
                 query,
