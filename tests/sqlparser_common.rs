@@ -22744,3 +22744,30 @@ fn display_create_procedure_parameter_list_propagates_write_errors() {
     let mut writer = RejectingWriter(" (");
     assert_eq!(write!(writer, "{statement}"), Err(fmt::Error));
 }
+
+#[test]
+fn parse_alter_table_reset_options() {
+    match alter_table_op(verified_stmt(
+        "ALTER TABLE tab RESET (fillfactor, autovacuum_enabled)",
+    )) {
+        AlterTableOperation::ResetOptions { options } => {
+            assert_eq!(
+                options,
+                [Ident::new("fillfactor"), Ident::new("autovacuum_enabled")]
+            );
+        }
+        _ => unreachable!(),
+    }
+
+    for (sql, expected) in [
+        ("ALTER TABLE tab RESET ()", "Expected: identifier, found: )"),
+        ("ALTER TABLE tab RESET (a = 1)", "Expected: ), found: ="),
+        ("ALTER TABLE tab RESET a", "Expected: (, found: a"),
+    ] {
+        assert_eq!(
+            all_dialects().parse_sql_statements(sql).unwrap_err(),
+            ParserError::ParserError(expected.to_string()),
+            "{sql}"
+        );
+    }
+}
