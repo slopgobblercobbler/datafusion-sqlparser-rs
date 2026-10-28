@@ -592,4 +592,9 @@ impl Dialect for PostgreSqlDialect {
     fn supports_attach_partition_of(&self) -> bool {
         true
     }
+
+    /// See <https://www.postgresql.org/docs/current/sql-createforeigntable.html>
+    fn supports_column_generic_options(&self) -> bool {
+        true
+    }
 }
