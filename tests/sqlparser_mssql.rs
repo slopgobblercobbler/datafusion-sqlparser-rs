@@ -133,7 +133,7 @@ fn parse_create_procedure() {
         ms().verified_stmt(sql),
         Statement::CreateProcedure {
             or_alter: true,
-            body: ConditionalStatements::BeginEnd(BeginEndStatements {
+            body: CreateProcedureBody::As(ConditionalStatements::BeginEnd(BeginEndStatements {
                 begin_token: AttachedToken::empty(),
                 statements: vec![Statement::Query(Box::new(Query {
                     with: None,
@@ -175,7 +175,7 @@ fn parse_create_procedure() {
                     })))
                 }))],
                 end_token: AttachedToken::empty(),
-            }),
+            })),
             params: Some(vec![
                 ProcedureParam {
                     name: Ident {
