@@ -11693,6 +11693,10 @@ fn parse_create_user_mapping() {
             "Expected: SERVER, found: EOF",
         ),
         (
+            "CREATE USER MAPPING FOR",
+            "Expected: identifier, found: EOF",
+        ),
+        (
             "CREATE USER MAPPING FOR app SERVER",
             "Expected: identifier, found: EOF",
         ),
