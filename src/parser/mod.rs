@@ -17458,6 +17458,10 @@ impl<'a> Parser<'a> {
             // Stage reference: @mystage or @namespace.stage (e.g. Snowflake)
             self.parse_snowflake_stage_table_factor()
         } else {
+            let inheritance_markers = self.dialect.supports_table_inheritance_markers();
+            let only = inheritance_markers && self.parse_keyword(Keyword::ONLY);
+            let only_parenthesized = only && self.consume_token(&Token::LParen);
+
             // Unquoted reserved keywords, e.g. `ON`, are not table names. The
             // keyword is consumed first so that `is_table_factor` peeks past it,
             // as it does at the trailing comma check.
@@ -17473,6 +17477,19 @@ impl<'a> Parser<'a> {
             }
 
             let name = self.parse_object_name(true)?;
+
+            let inheritance = if only {
+                if only_parenthesized {
+                    self.expect_token(&Token::RParen)?;
+                }
+                Some(TableInheritance::Only {
+                    parenthesized: only_parenthesized,
+                })
+            } else if inheritance_markers && self.consume_token(&Token::Mul) {
+                Some(TableInheritance::IncludeDescendants)
+            } else {
+                None
+            };
 
             let json_path = match &self.peek_token_ref().token {
                 Token::LBracket if self.dialect.supports_partiql() => Some(self.parse_json_path()?),
@@ -17551,6 +17568,7 @@ impl<'a> Parser<'a> {
                 json_path,
                 sample,
                 index_directives,
+                inheritance,
             };
 
             while let Some(kw) = self.parse_one_of_keywords(&[Keyword::PIVOT, Keyword::UNPIVOT]) {
@@ -17601,6 +17619,7 @@ impl<'a> Parser<'a> {
             json_path: None,
             sample: None,
             index_directives: vec![],
+            inheritance: None,
         })
     }
 
